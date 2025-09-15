@@ -12,7 +12,7 @@ RUN npm ci --only=production
 # Copy frontend source
 COPY client/ ./
 
-# Build the Next.js application
+# Build the Next.js application for static export
 RUN npm run build
 
 # Final stage
@@ -38,11 +38,10 @@ RUN pip install --no-cache-dir -r requirement.txt
 # Copy application code
 COPY backend-python/ .
 
-# Copy built frontend
-COPY --from=frontend-builder /frontend/.next /app/frontend/.next
+# Copy built Next.js standalone files
+COPY --from=frontend-builder /frontend/.next/standalone /app/frontend
+COPY --from=frontend-builder /frontend/.next/static /app/frontend/.next/static
 COPY --from=frontend-builder /frontend/public /app/frontend/public
-COPY --from=frontend-builder /frontend/package.json /app/frontend/package.json
-COPY --from=frontend-builder /frontend/node_modules /app/frontend/node_modules
 
 # Create uploads directory
 RUN mkdir -p /app/uploads
@@ -50,10 +49,14 @@ RUN mkdir -p /app/uploads
 # Create startup script that runs both services
 RUN echo '#!/bin/bash\n\
 echo "Starting AISensei Full Stack Application"\n\
-echo "Frontend will be served statically through backend"\n\
-# Start FastAPI backend on the PORT specified by Cloud Run\n\
-echo "Starting backend on port $PORT"\n\
-cd /app && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}\n\
+# Start Next.js frontend on port 3000 in background\n\
+cd /app/frontend && PORT=3000 node server.js &\n\
+echo "Frontend started on port 3000"\n\
+# Wait a moment for frontend to start\n\
+sleep 3\n\
+# Start FastAPI backend with reverse proxy to frontend\n\
+echo "Starting backend on port ${PORT:-8080}"\n\
+cd /app && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # Run as non-root user

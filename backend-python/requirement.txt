@@ -2,7 +2,8 @@ uvicorn
 fastapi
 pydantic-settings
 sqlalchemy
-httpx
+aiosqlite
+httpx[http2]
 asyncpg
 python-jose
 passlib

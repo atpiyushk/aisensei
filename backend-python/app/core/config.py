@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://aisensei:aisensei123@localhost:5432/aisensei")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./aisensei.db")
     
     # Redis
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
@@ -25,7 +25,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "https://www.aisensei.app",
-        "https://aisensei.app"
+        "https://aisensei.app",
+        "https://ai-teacher-assist-707300942903.asia-south1.run.app"
     ]
     
     # Google OAuth
